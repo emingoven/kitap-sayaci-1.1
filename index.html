@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Okuma Takibi</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+body{
+font-family:-apple-system;
+background:#f2f2f7;
+margin:0;
+padding:20px;
+text-align:center;
+}
+
+h1{
+font-size:28px;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:16px;
+margin:15px auto;
+max-width:400px;
+box-shadow:0 4px 10px rgba(0,0,0,0.05);
+}
+
+input{
+width:90%;
+padding:10px;
+margin:8px;
+border-radius:8px;
+border:1px solid #ddd;
+}
+
+button{
+padding:10px 20px;
+background:#007AFF;
+color:white;
+border:none;
+border-radius:10px;
+font-size:16px;
+}
+
+.stat{
+font-size:20px;
+margin:10px;
+}
+
+li{
+list-style:none;
+background:white;
+margin:8px;
+padding:10px;
+border-radius:10px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>📚 Okuma Takibi</h1>
+
+<div class="card">
+
+<input id="kitap" placeholder="Kitap adı">
+
+<input id="sayfa" type="number" placeholder="Okunan sayfa">
+
+<button onclick="ekle()">Kaydet</button>
+
+</div>
+
+<div class="card">
+
+<h3>🎯 Günlük Hedef</h3>
+
+<input id="hedef" type="number" placeholder="Günlük sayfa hedefi">
+
+<button onclick="hedefKaydet()">Hedef Kaydet</button>
+
+</div>
+
+<div class="card">
+
+<div class="stat">Toplam Sayfa: <b id="toplam">0</b></div>
+
+<div class="stat">Bugün Okunan: <b id="bugun">0</b></div>
+
+<div class="stat">Hedef: <b id="hedefgoster">0</b></div>
+
+</div>
+
+<div class="card">
+
+<canvas id="grafik"></canvas>
+
+</div>
+
+<ul id="liste"></ul>
+
+<script>
+
+let veriler = JSON.parse(localStorage.getItem("okuma")) || [];
+let hedef = localStorage.getItem("hedef") || 0;
+
+document.getElementById("hedefgoster").innerText = hedef;
+
+function kaydet(){
+localStorage.setItem("okuma",JSON.stringify(veriler));
+}
+
+function hedefKaydet(){
+
+let h = document.getElementById("hedef").value;
+
+localStorage.setItem("hedef",h);
+
+document.getElementById("hedefgoster").innerText = h;
+
+}
+
+function ekle(){
+
+let kitap=document.getElementById("kitap").value;
+let sayfa=parseInt(document.getElementById("sayfa").value);
+
+if(!kitap || !sayfa) return;
+
+veriler.push({
+kitap:kitap,
+sayfa:sayfa,
+tarih:new Date().toLocaleDateString()
+});
+
+kaydet();
+goster();
+
+}
+
+function goster(){
+
+let liste=document.getElementById("liste");
+liste.innerHTML="";
+
+let toplam=0;
+let bugun=0;
+
+let bugunTarih=new Date().toLocaleDateString();
+
+let gunler={};
+
+veriler.forEach(v=>{
+
+toplam+=v.sayfa;
+
+if(v.tarih==bugunTarih){
+bugun+=v.sayfa;
+}
+
+if(!gunler[v.tarih]){
+gunler[v.tarih]=0;
+}
+
+gunler[v.tarih]+=v.sayfa;
+
+let li=document.createElement("li");
+
+li.innerText=v.tarih+" - "+v.kitap+" ("+v.sayfa+" sayfa)";
+
+liste.appendChild(li);
+
+});
+
+document.getElementById("toplam").innerText=toplam;
+document.getElementById("bugun").innerText=bugun;
+
+grafikCiz(gunler);
+
+}
+
+function grafikCiz(gunler){
+
+let ctx=document.getElementById("grafik");
+
+let labels=Object.keys(gunler);
+let data=Object.values(gunler);
+
+new Chart(ctx,{
+type:'bar',
+data:{
+labels:labels,
+datasets:[{
+label:'Okunan Sayfa',
+data:data
+}]
+}
+});
+
+}
+
+goster();
+
+</script>
+
+</body>
+</html>
